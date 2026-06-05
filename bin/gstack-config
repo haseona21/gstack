@@ -31,8 +31,21 @@ case "${1:-}" in
   list)
     cat "$CONFIG_FILE" 2>/dev/null || true
     ;;
+  snooze)
+    SNOOZE_FILE="$STATE_DIR/update-snoozed"
+    if [ ! -f "$SNOOZE_FILE" ]; then
+      echo "No update snoozed."
+    else
+      read -r SV SL SE < "$SNOOZE_FILE"
+      case "${SL:-}" in 1) DUR=86400 ;; 2) DUR=172800 ;; *) DUR=604800 ;; esac
+      LEFT=$(( SE + DUR - $(date +%s) ))
+      [ "$LEFT" -gt 0 ] \
+        && echo "v$SV snoozed (level $SL), ~$(( LEFT / 3600 ))h left" \
+        || echo "v$SV snooze expired"
+    fi
+    ;;
   *)
-    echo "Usage: gstack-config {get|set|list} [key] [value]"
+    echo "Usage: gstack-config {get|set|list|snooze} [key] [value]"
     exit 1
     ;;
 esac
